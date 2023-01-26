@@ -1,0 +1,27 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: another
+  name: another-ldap
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.ingress.kubernetes.io/auth-url: https://another-ldap.another.svc.cluster.local/auth
+    nginx.ingress.kubernetes.io/server-snippet: |
+      error_page 401 = @login;
+      location @login {
+        return 302 https://another-ldap.com/?protocol=$pass_access_scheme&callback=$host;
+      }
+spec:
+  rules:
+  - host: another-ldap.testmyldap.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: another-ldap
+            port:
+              number: 443
